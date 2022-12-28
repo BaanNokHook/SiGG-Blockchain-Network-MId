@@ -1,0 +1,64 @@
+version: "3.5"
+
+services:
+  ca_nbtc:
+    network_mode: mobileid-network
+    image: hyperledger/fabric-ca:1.4.7
+    container_name: ca.nbtc.mobileid.com
+    hostname: ca.nbtc.mobileid.com
+    environment:
+      # Overriding soft HSM configs
+      # see more: https://hyperledger-fabric-ca.readthedocs.io/en/release-1.4/users-guide.html#configuring-fabric-ca-server-to-use-softhsm2
+      # - FABRIC_CA_SERVER_BCCSP_DEFAULT=PKCS11
+      # - FABRIC_CA_SERVER_BCCSP_PKCS11_LIBRARY=/usr/local/Cellar/softhsm/2.1.0/lib/softhsm/libsofthsm2.so
+      # - FABRIC_CA_SERVER_BCCSP_PKCS11_PIN=#####
+      # - FABRIC_CA_SERVER_BCCSP_PKCS11_LABEL=XXXX
+
+      # Base CA server config
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server/
+      FABRIC_CA_SERVER_CA_NAME: ca-nbtc
+      FABRIC_CA_SERVER_CA_CERTFILE: /etc/hyperledger/fabric-ca-server/ca-cert.pem
+
+      # CA TLS Config
+      FABRIC_CA_SERVER_TLS_ENABLED: "true"
+      FABRIC_CA_SERVER_TLS_CERTFILE: /etc/hyperledger/fabric-ca-server/tls-cert.pem
+      FABRIC_CA_SERVER_TLS_CLIENTAUTH_TYPE: NoClientCert
+
+      # Postgres DB client config
+      FABRIC_CA_SERVER_DB_TYPE: postgres
+      FABRIC_CA_SERVER_DB_DATASOURCE: "dbname=fabric_ca host=/var/run/postgresql/ user=postgres password=postgrespw sslmode=disable"
+
+    command: sh -c 'fabric-ca-server start --cfg.identities.allowremove --cfg.affiliations.allowremove -b admin:adminpw -d'
+    volumes:
+      - ./peer_postgresql/:/var/run/postgresql/:rw
+      - ./fabric-ca/:/etc/database-client/
+      - ./fabric-ca/fabric-ca-server-config.yaml:/etc/hyperledger/fabric-ca-server/fabric-ca-server-config.yaml
+    # ports:
+    #   - protocol: tcp
+    #     published: 7054
+    #     target: 7054
+    restart: always
+
+  postgres_ca_nbtc:
+    network_mode: mobileid-network
+    image: postgres:11.4
+    container_name: postgres.nbtc.mobileid.com
+    hostname: postgres.nbtc.mobileid.com
+    environment:
+      POSTGRES_DB: fabric_ca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
+      PGDATA: /data/postgres/
+    volumes:
+      - ./peer_postgresql/:/var/run/postgresql/:rw
+      - ./data/:/data/postgres/:rw
+      - ./postgres-config/:/config/:rw
+      - ./postgres/:/var/lib/postgresql/:rw
+    # ports:
+    #   - protocol: tcp
+    #     published: 5432
+    #     target: 5432
+    restart: always
+
+volumes:
+  postgres_ca_nbtc: {}

@@ -1,0 +1,40 @@
+OrdererOrgs:
+
+  - Name: Orderer
+    Domain: mobileid.com
+    Specs:
+      - Hostname: orderer
+      - Hostname: orderer2
+      - Hostname: orderer3
+
+PeerOrgs:
+
+  - Name: Org1
+    Domain: nbtc.mobileid.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      # SANS:
+      #   - "127.0.0.1"
+    Users:
+      Count: 1
+
+  - Name: Org2
+    Domain: ais.mobileid.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      # SANS:
+      #   - "127.0.0.1"
+    Users:
+      Count: 1
+
+  - Name: Org3
+    Domain: bbl.mobileid.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      # SANS:
+      #   - "127.0.0.1"
+    Users:
+      Count: 1

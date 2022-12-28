@@ -1,0 +1,108 @@
+version: "3.5"
+
+services:
+  cli_peer0.bbl.mobileid.com:
+    network_mode: mobileid-network
+    command: /bin/bash
+    environment:
+      CC_NAME: mobileidcc
+      CC_VERSION: 4
+      CC_SEQUENCE: 1
+      CC_LANG: golang
+      CC_INIT: '{"Args":[]}'
+      CC_POLICY: "OR ('NBTCMSP.member', 'AISMSP.member', 'BBLMSP.member')"
+      CC_INVOCATION: '{"function":"invokeHealthCheck","Args":[""]}'
+      CC_QUERY: '{"function":"listHealthCheck","Args":[""]}'
+      CC_PACKAGE: mobileidcc.tar.gz
+      CHANNEL_NAME: mobileid
+      ORDERER_ADDRESS: orderer3.mobileid.com:7050
+      OVERIDE_ORDERER_HOSTNAME: orderer3.mobileid.com
+      CORE_PEER_ADDRESS: peer0.bbl.mobileid.com:7051
+      CORE_PEER_ID: cli
+      CORE_PEER_LOCALMSPID: BBLMSP
+      CORE_PEER_MSPCONFIGPATH: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/bbl.mobileid.com/users/Admin@bbl.mobileid.com/msp
+      CORE_PEER_TLS_CERT_FILE: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/bbl.mobileid.com/peers/peer0.bbl.mobileid.com/tls/server.crt
+      CORE_PEER_TLS_ENABLED: "true"
+      CORE_PEER_TLS_KEY_FILE: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/bbl.mobileid.com/peers/peer0.bbl.mobileid.com/tls/server.key
+      CORE_PEER_TLS_ROOTCERT_FILE: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/bbl.mobileid.com/peers/peer0.bbl.mobileid.com/tls/ca.crt
+      CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+      CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: mobileid-network
+      FABRIC_LOGGING_SPEC: INFO
+      GOPATH: /opt/gopath
+      ORDERER_CA: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/mobileid.com/orderers/orderer3.mobileid.com/msp/tlscacerts/tlsca.mobileid.com-cert.pem
+    container_name: cli_peer0.bbl.mobileid.com
+    image: hyperledger/fabric-tools:2.1.1
+    stdin_open: true
+    tty: true
+    volumes:
+      - /var/run:/host/var/run:rw
+      # - ../../../chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode:rw
+      - ../../../chaincode/mobileidcc.tar.gz:/opt/gopath/src/github.com/hyperledger/fabric/peer/mobileidcc.tar.gz:rw
+      - ../../../config/channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts:rw
+      - ../../../config/crypto-config/:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/:rw
+      - ./mobileidcc/scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts:rw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    restart: always
+
+  peer0_bbl_mobileid_com:
+    network_mode: mobileid-network
+    command: peer node start
+    depends_on:
+      - couchdb0_bbl
+    environment:
+      CORE_OPERATIONS_TLS_ENABLED: "false"
+      CORE_OPERATIONS_LISTENADDRESS: 0.0.0.0:9447
+      CORE_METRICS_PROVIDER: prometheus
+      CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: couchdb0.bbl.mobileid.com:5984
+      CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: "adminpw"
+      CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: "admin"
+      CORE_LEDGER_STATE_STATEDATABASE: CouchDB
+      CORE_PEER_ADDRESS: peer0.bbl.mobileid.com:7051
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer0.bbl.mobileid.com:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: peer0.bbl.mobileid.com:7051
+      CORE_PEER_GOSSIP_ORGLEADER: "false"
+      CORE_PEER_GOSSIP_USELEADERELECTION: "true"
+      CORE_PEER_ID: peer0.bbl.mobileid.com
+      CORE_PEER_LOCALMSPID: BBLMSP
+      CORE_PEER_PROFILE_ENABLED: "true"
+      CORE_PEER_TLS_CERT_FILE: /etc/hyperledger/fabric/tls/server.crt
+      CORE_PEER_TLS_ENABLED: "true"
+      CORE_PEER_TLS_KEY_FILE: /etc/hyperledger/fabric/tls/server.key
+      CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/fabric/tls/ca.crt
+      CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: mobileid-network
+      # CORE_VM_DOCKER_ATTACHSTDOUT: "true"
+      CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+      FABRIC_LOGGING_SPEC: INFO
+    hostname: peer0.bbl.mobileid.com
+    container_name: peer0.bbl.mobileid.com
+    image: hyperledger/fabric-peer:2.1.1
+    # ports:
+    #   - protocol: tcp
+    #     published: 7051
+    #     target: 7051
+    #   - protocol: tcp
+    #     published: 7052
+    #     target: 7052
+    volumes:
+      - ../../../config/crypto-config/peerOrganizations/bbl.mobileid.com/peers/peer0.bbl.mobileid.com/msp:/etc/hyperledger/fabric/msp:rw
+      - ../../../config/crypto-config/peerOrganizations/bbl.mobileid.com/peers/peer0.bbl.mobileid.com/tls:/etc/hyperledger/fabric/tls:rw
+      - /var/run:/host/var/run:rw
+      - peer0_bbl_volume:/var/hyperledger/production:rw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    restart: always
+
+  couchdb0_bbl:
+    network_mode: mobileid-network
+    environment:
+      COUCHDB_PASSWORD: "adminpw"
+      COUCHDB_USER: "admin"
+    image: hyperledger/fabric-couchdb:0.4.20
+    hostname: couchdb0.bbl.mobileid.com
+    container_name: couchdb0.bbl.mobileid.com
+    # ports:
+    #   - protocol: tcp
+    #     published: 5984
+    #     target: 5984
+
+volumes:
+  peer0_bbl_volume: {}

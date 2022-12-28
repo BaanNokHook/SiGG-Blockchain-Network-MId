@@ -1,0 +1,43 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:
+  - &PeerOrg
+    # DefaultOrg defines the organization which is used in the sampleconfig
+    # of the fabric.git development environment
+    Name: NBTC
+
+    # ID to load the MSP definition as
+    ID: NBTCMSP
+
+    MSPDir: crypto/peerOrganizations/nbtc.mobileid.com/msp
+
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('NBTCMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('NBTCMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('NBTCMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('NBTCMSP.member')"
+
+    AnchorPeers:
+      # AnchorPeers defines the location of peers which can be used
+      # for cross org gossip communication.  Note, this value is only
+      # encoded in the genesis block in the Application section context
+      - Host: peer0.nbtc.mobileid.com
+        Port: 7051
